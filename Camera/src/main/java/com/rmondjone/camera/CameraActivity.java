@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Environment;
@@ -57,7 +59,6 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
     /**
      * 拍照按钮
      */
-    private ImageView mPhotoButton;
     /**
      * 取消保存按钮
      */
@@ -99,28 +100,19 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
      * 是否正在聚焦
      */
     private boolean isFoucing;
-    /**
-     * 蒙版类型
-     */
-    private MongolianLayerType mMongolianLayerType;
-    /**
-     * 蒙版图片
-     */
-    private ImageView mMaskImage;
-    /**
-     * 护照出入境蒙版
-     */
-    private ImageView mPassportEntryAndExitImage;
+
+
     /**
      * 提示文案容器
      */
     private RelativeLayout rlCameraTip;
 
+    private CircleTextProgressbar tv_take;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camre_layout);
-        mMongolianLayerType = (MongolianLayerType) getIntent().getSerializableExtra("MongolianLayerType");
         initView();
         setOnclickListener();
     }
@@ -140,14 +132,13 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
      *
      * @param activity
      * @param requestCode
-     * @param type
      */
-    public static void startMe(Activity activity, int requestCode, MongolianLayerType type) {
+    public static void startMe(Activity activity, int requestCode) {
         PermissionUtils.applicationPermissions(activity, new PermissionUtils.PermissionListener() {
             @Override
             public void onSuccess(Context context) {
                 Intent intent = new Intent(activity, CameraActivity.class);
-                intent.putExtra("MongolianLayerType", type);
+
                 activity.startActivityForResult(intent, requestCode);
             }
 
@@ -162,29 +153,6 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         }, Permission.Group.STORAGE, Permission.Group.CAMERA);
     }
 
-    /**
-     * 注释：获取蒙版图片
-     * 时间：2019/3/4 0004 17:19
-     * 作者：郭翰林
-     *
-     * @return
-     */
-    private int getMaskImage() {
-        if (mMongolianLayerType == MongolianLayerType.BANK_CARD) {
-            return R.mipmap.bank_card;
-        } else if (mMongolianLayerType == MongolianLayerType.HK_MACAO_TAIWAN_PASSES_POSITIVE) {
-            return R.mipmap.hk_macao_taiwan_passes_positive;
-        } else if (mMongolianLayerType == MongolianLayerType.HK_MACAO_TAIWAN_PASSES_NEGATIVE) {
-            return R.mipmap.hk_macao_taiwan_passes_negative;
-        } else if (mMongolianLayerType == MongolianLayerType.IDCARD_POSITIVE) {
-            return R.mipmap.idcard_positive;
-        } else if (mMongolianLayerType == MongolianLayerType.IDCARD_NEGATIVE) {
-            return R.mipmap.idcard_negative;
-        } else if (mMongolianLayerType == MongolianLayerType.PASSPORT_PERSON_INFO) {
-            return R.mipmap.passport_person_info;
-        }
-        return 0;
-    }
 
     /**
      * 注释：设置监听事件
@@ -195,7 +163,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         mCancleButton.setOnClickListener(this);
         mCancleSaveButton.setOnClickListener(this);
         mFlashButton.setOnClickListener(this);
-        mPhotoButton.setOnClickListener(this);
+        findViewById(R.id.take_photo_button).setOnClickListener(this);
         mSaveButton.setOnClickListener(this);
     }
 
@@ -309,41 +277,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
     }
 
 
-    /**
-     * 注释：蒙版类型
-     * 时间：2019/2/28 0028 16:26
-     * 作者：郭翰林
-     */
-    public enum MongolianLayerType {
-        /**
-         * 护照个人信息
-         */
-        PASSPORT_PERSON_INFO,
-        /**
-         * 护照出入境
-         */
-        PASSPORT_ENTRY_AND_EXIT,
-        /**
-         * 身份证正面
-         */
-        IDCARD_POSITIVE,
-        /**
-         * 身份证反面
-         */
-        IDCARD_NEGATIVE,
-        /**
-         * 港澳通行证正面
-         */
-        HK_MACAO_TAIWAN_PASSES_POSITIVE,
-        /**
-         * 港澳通行证反面
-         */
-        HK_MACAO_TAIWAN_PASSES_NEGATIVE,
-        /**
-         * 银行卡
-         */
-        BANK_CARD
-    }
+
 
     /**
      * 注释：初始化视图
@@ -355,25 +289,18 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         mPreviewLayout = findViewById(R.id.camera_preview_layout);
         mPhotoLayout = findViewById(R.id.ll_photo_layout);
         mConfirmLayout = findViewById(R.id.ll_confirm_layout);
-        mPhotoButton = findViewById(R.id.take_photo_button);
         mCancleSaveButton = findViewById(R.id.cancle_save_button);
         mSaveButton = findViewById(R.id.save_button);
         mFlashButton = findViewById(R.id.flash_button);
-        mMaskImage = findViewById(R.id.mask_img);
         rlCameraTip = findViewById(R.id.camera_tip);
-        mPassportEntryAndExitImage = findViewById(R.id.passport_entry_and_exit_img);
-        if (mMongolianLayerType == null) {
-            mMaskImage.setVisibility(View.GONE);
-            rlCameraTip.setVisibility(View.GONE);
-            return;
-        }
-        //设置蒙版,护照出入境蒙版特殊处理
-        if (mMongolianLayerType != MongolianLayerType.PASSPORT_ENTRY_AND_EXIT) {
-            Glide.with(this).load(getMaskImage()).into(mMaskImage);
-        } else {
-            mMaskImage.setVisibility(View.GONE);
-            mPassportEntryAndExitImage.setVisibility(View.VISIBLE);
-        }
+        tv_take = findViewById(R.id.take_photo_button);
+        // 模拟网易新闻跳过。
+        tv_take.setOutLineColor(Color.TRANSPARENT);
+        tv_take.setInCircleColor(Color.parseColor("#AAC6C6C6"));
+        tv_take.setProgressColor(Color.DKGRAY);
+        tv_take.setProgressLineWidth(3);
+
+
     }
 
     /**
@@ -415,5 +342,13 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
             }
             finish();
         }
+    }
+
+    public static Bitmap rotateBitmap(int angle, Bitmap bitmap) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(angle);
+        Bitmap rotation = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(),
+                matrix, true);
+        return rotation;
     }
 }

@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
      * 作者：郭翰林
      */
     public void gotoCamare(View view) {
-        CameraActivity.startMe(this, 2005, CameraActivity.MongolianLayerType.IDCARD_POSITIVE);
+        CameraActivity.startMe(this, 2005);
     }
 
     @Override
