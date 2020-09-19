@@ -31,6 +31,8 @@ public class BitmapUtils {
             return bitmap;
         }
         Camera.CameraInfo info = new Camera.CameraInfo();
+
+
         Camera.getCameraInfo(id, info);
         bitmap = rotaingImageView(id, info.orientation, bitmap);
         return bitmap;

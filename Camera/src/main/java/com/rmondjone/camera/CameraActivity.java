@@ -107,7 +107,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
      */
     private RelativeLayout rlCameraTip;
 
-    private CircleTextProgressbar tv_take;
+    private Button tv_take;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -120,7 +120,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
     @Override
     protected void onResume() {
         super.onResume();
-        mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_BACK);
+        mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
         CameraPreview preview = new CameraPreview(this, mCamera);
         mOverCameraView = new OverCameraView(this);
         mPreviewLayout.addView(preview);
@@ -277,8 +277,6 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
     }
 
 
-
-
     /**
      * 注释：初始化视图
      * 时间：2019/3/1 0001 11:12
@@ -292,13 +290,12 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         mCancleSaveButton = findViewById(R.id.cancle_save_button);
         mSaveButton = findViewById(R.id.save_button);
         mFlashButton = findViewById(R.id.flash_button);
-        rlCameraTip = findViewById(R.id.camera_tip);
         tv_take = findViewById(R.id.take_photo_button);
         // 模拟网易新闻跳过。
-        tv_take.setOutLineColor(Color.TRANSPARENT);
-        tv_take.setInCircleColor(Color.parseColor("#AAC6C6C6"));
-        tv_take.setProgressColor(Color.DKGRAY);
-        tv_take.setProgressLineWidth(3);
+//              tv_take.setOutLineColor(Color.TRANSPARENT);
+//        tv_take.setInCircleColor(Color.parseColor("#AAC6C6C6"));
+//        tv_take.setProgressColor(Color.DKGRAY);
+//        tv_take.setProgressLineWidth(3);
 
 
     }
@@ -331,7 +328,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
                     fos.close();
                     Bitmap retBitmap = BitmapFactory.decodeFile(imagePath);
                     retBitmap = BitmapUtils.setTakePicktrueOrientation(Camera.CameraInfo.CAMERA_FACING_BACK, retBitmap);
-                    BitmapUtils.saveBitmap(retBitmap, imagePath);
+                    BitmapUtils.saveBitmap(rotateBitmap(retBitmap), imagePath);
                     Intent intent = new Intent();
                     intent.putExtra(KEY_IMAGE_PATH, imagePath);
                     setResult(RESULT_OK, intent);
@@ -344,9 +341,9 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         }
     }
 
-    public static Bitmap rotateBitmap(int angle, Bitmap bitmap) {
+    public static Bitmap rotateBitmap(Bitmap bitmap) {
         Matrix matrix = new Matrix();
-        matrix.postRotate(angle);
+        matrix.postRotate(180);
         Bitmap rotation = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(),
                 matrix, true);
         return rotation;
